@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "token": "API token"
+        },
+        "description": "Please enter your API token from your [Kassalapp profile page]({settings_url})"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_api_key": "Invalid API key",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "single_instance_allowed": "Already configured. Only a single configuration possible."
+    },
+    "create_entry": {
+      "default": "Successfully authenticated"
+    }
+  }
+}
