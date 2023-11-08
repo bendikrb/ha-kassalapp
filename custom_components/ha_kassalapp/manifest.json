@@ -9,6 +9,6 @@
   "documentation": "https://github.com/bendikrb/ha_kassalapp",
   "iot_class": "cloud_polling",
   "requirements": [
-    "kassalappy==0.2.0"
+    "kassalappy==0.7.0"
   ]
 }

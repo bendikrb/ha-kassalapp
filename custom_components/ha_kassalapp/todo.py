@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.todo import (
@@ -42,21 +43,37 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str]:
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Kassalapp todo platform config entry."""
+    """Set up the Kassalapp to-do platform config entry."""
     api: Kassalapp = hass.data[DOMAIN][entry.entry_id]
     shopping_lists = await api.get_shopping_lists()
     async_add_entities(
         (
             KassalappTodoListEntity(
                 KassalappCoordinator(hass, api, shopping_list["id"]),
-                shopping_list["title"],
                 entry.entry_id,
                 shopping_list["id"],
+                shopping_list["title"],
             )
             for shopping_list in shopping_lists
         ),
         update_before_add=True,
     )
+
+
+@dataclasses.dataclass
+class KassalappProduct:
+    """A product description from kassalapp."""
+
+    id: int
+    name: str
+    image: str
+
+
+@dataclasses.dataclass
+class KassalappTodoItem(TodoItem):
+    """An extended version of To-do item."""
+
+    product: KassalappProduct | None = None
 
 
 class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListEntity):
@@ -82,26 +99,40 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         self._attr_title = shopping_list_title
 
     @property
-    def todo_items(self) -> list[TodoItem] | None:
+    def todo_items(self) -> list[KassalappTodoItem] | None:
         """Get the current set of To-do items."""
         if self.coordinator.data is None:
             return None
         return [
-            TodoItem(
+            KassalappTodoItem(
                 summary=item["text"],
                 uid=item["id"],
                 status=TODO_STATUS_MAP.get(
                     item.get("checked"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
                 ),
+                product=item.get("product"),
             )
             for item in self.coordinator.data
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+        list_item = {
+            "text": item.summary,
+        }
+        products: list[dict[str, any]] = await self.coordinator.api.product_search(
+            search=list_item["text"],
+            unique=True,
+            size=1,
+            sort="date_asc",
+        )
+        if products:
+            product = products.pop()
+            list_item["product_id"] = product["id"]
+
         await self.coordinator.api.add_shopping_list_item(
             list_id=self._shopping_list_id,
-            text=item.summary,
+            **list_item,
         )
         await self.coordinator.async_refresh()
 

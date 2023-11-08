@@ -1,0 +1,49 @@
+product_search:
+  fields:
+    search:
+      example: "grandiosa classic"
+    brand:
+      example: "BAMA"
+    vendor:
+      example: "orkla foods"
+    excl_allergens:
+      selector:
+        select:
+          options: []
+          multiple: true
+          custom_value: true
+    incl_allergens:
+      selector:
+        select:
+          options: []
+          multiple: true
+          custom_value: true
+    exclude_without_ean:
+      selector:
+        boolean:
+    price_max:
+      selector:
+        number:
+    price_min:
+      selector:
+        number:
+    size:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+    sort:
+      selector:
+        select:
+          options:
+            - date_asc
+            - date_desc
+            - name_asc
+            - name_desc
+            - price_asc
+            - price_desc
+    unique:
+      default: false
+      selector:
+        boolean:

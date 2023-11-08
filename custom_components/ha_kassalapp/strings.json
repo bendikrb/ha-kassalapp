@@ -19,5 +19,56 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "services": {
+    "product_search": {
+      "name": "Search for products",
+      "fields": {
+        "search": {
+          "name": "Search string",
+          "description": "Search for products based on a keyword. The keyword must be a string with a minimum length of 3 characters."
+        },
+        "brand": {
+          "name": "Brand",
+          "description": "Filter products by brand name."
+        },
+        "vendor": {
+          "name": "Vendor",
+          "description": "Filter products by vendor (leverandør)."
+        },
+        "excl_allergens": {
+          "name": "Allergens (excl)",
+          "description": "Exclude specific allergens from the products."
+        },
+        "incl_allergens": {
+          "name": "Allergens (incl)",
+          "description": "Include only specific allergens in the products."
+        },
+        "exclude_without_ean": {
+          "name": "Require EAN",
+          "description": "If true, products without an EAN number are excluded from the results."
+        },
+        "price_max": {
+          "name": "Price (max)",
+          "description": "Filter products by maximum price."
+        },
+        "price_min": {
+          "name": "Price (min)",
+          "description": "Filter products by minimum price."
+        },
+        "size": {
+          "name": "Size",
+          "description": "The number of products to be displayed per page."
+        },
+        "sort": {
+          "name": "Sort",
+          "description": "Sort the products by a specific criteria."
+        },
+        "unique": {
+          "name": "Unique",
+          "description": "If true, the product list will be collapsed based on the EAN number of the product."
+        }
+      }
+    }
   }
 }

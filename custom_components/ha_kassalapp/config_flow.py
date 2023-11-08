@@ -1,21 +1,22 @@
 """Config flow for Kassalapp integration."""
 from __future__ import annotations
 
-from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp.http_exceptions import HttpBadRequest
 from kassalappy import Kassalapp
+from kassalappy.exceptions import AuthorizationError, FatalHttpException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_TOKEN,
 )
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +45,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api = Kassalapp(user_input[CONF_TOKEN])
             try:
-                await api.get_shopping_lists()
-            except HttpBadRequest as err:
-                if err.code == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_api_key"
-                else:
-                    errors["base"] = "cannot_connect"
+                await api.healthy()
+            except AuthorizationError:
+                errors["base"] = "invalid_api_key"
+            except FatalHttpException as err:
+                errors["base"] = "cannot_connect"
+                _LOGGER.exception("Cannot connect: %s", err)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

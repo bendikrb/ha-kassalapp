@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for the Kassalapp component."""
 from __future__ import annotations
 
-import asyncio
 import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Final
@@ -41,5 +40,4 @@ class KassalappCoordinator(DataUpdateCoordinator[list[ShoppingListItem]]):
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch tasks from API endpoint."""
-        async with asyncio.timeout(TIMEOUT):
-            return await self.api.get_shopping_list_items(self._shopping_list_id)
+        return await self.api.get_shopping_list_items(self._shopping_list_id)

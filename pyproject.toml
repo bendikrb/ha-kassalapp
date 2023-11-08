@@ -18,6 +18,7 @@ packages = []
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
 homeassistant = "2023.11"
+kassalappy = "^0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "3.0.2"
