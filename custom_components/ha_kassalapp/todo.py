@@ -31,7 +31,7 @@ def _convert_todo_item(item: TodoItem):
     if item.summary is not None:
         result["text"] = item.summary
     if item.status is not None:
-        result["checked"] = item.status == TodoItemStatus.COMPLETED,
+        result["checked"] = item.status == TodoItemStatus.COMPLETED
     return result
 
 
