@@ -1,9 +1,9 @@
-"""A todo platform for Kassalapp."""
+"""A todo platform for Kassal.app."""
 from __future__ import annotations
 
 import asyncio
 import dataclasses
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -20,23 +20,22 @@ if TYPE_CHECKING:
     from kassalappy import Kassalapp
 
     from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import HomeAssistant, callback
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
 }
-TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
 
-def _convert_todo_item(item: TodoItem) -> dict[str, str]:
+def _convert_todo_item(item: TodoItem):
     """Convert TodoItem dataclass items to dictionary of attributes for the Kassalapp API."""
-    result: dict[str, str] = {}
+    result: dict[str, Any] = {}
     if item.summary is not None:
         result["text"] = item.summary
     if item.status is not None:
-        result["checked"] = TODO_STATUS_MAP_INV[item.status]
+        result["checked"] = item.status == TodoItemStatus.COMPLETED,
     return result
 
 
@@ -49,10 +48,10 @@ async def async_setup_entry(
     async_add_entities(
         (
             KassalappTodoListEntity(
-                KassalappCoordinator(hass, api, shopping_list["id"]),
+                KassalappCoordinator(hass, api, shopping_list.id),
                 entry.entry_id,
-                shopping_list["id"],
-                shopping_list["title"],
+                shopping_list.id,
+                shopping_list.title,
             )
             for shopping_list in shopping_lists
         ),
@@ -98,29 +97,36 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         self._attr_unique_id = f"{config_entry_id}-{shopping_list_id}"
         self._attr_title = shopping_list_title
 
-    @property
-    def todo_items(self) -> list[KassalappTodoItem] | None:
-        """Get the current set of To-do items."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if self.coordinator.data is None:
-            return None
-        return [
-            KassalappTodoItem(
-                summary=item["text"],
-                uid=item["id"],
-                status=TODO_STATUS_MAP.get(
-                    item.get("checked"), TodoItemStatus.NEEDS_ACTION  # type: ignore[arg-type]
-                ),
-                product=item.get("product"),
-            )
-            for item in self.coordinator.data
-        ]
+            self._attr_todo_items = None
+        else:
+            items = []
+            for item in self.coordinator.data:
+                # if item.list_id != self._shopping_list_id:
+                #     continue
+                if item.checked:
+                    status = TodoItemStatus.COMPLETED
+                else:
+                    status = TodoItemStatus.NEEDS_ACTION
+                items.append(
+                    TodoItem(
+                        summary=item.text,
+                        uid=item.id,
+                        status=status,
+                    )
+                )
+            self._attr_todo_items = items
+        super()._handle_coordinator_update()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         list_item = {
             "text": item.summary,
         }
-        products: list[dict[str, any]] = await self.coordinator.api.product_search(
+        products = await self.coordinator.api.product_search(
             search=list_item["text"],
             unique=True,
             size=1,
@@ -128,7 +134,7 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         )
         if products:
             product = products.pop()
-            list_item["product_id"] = product["id"]
+            list_item["product_id"] = product.id
 
         await self.coordinator.api.add_shopping_list_item(
             list_id=self._shopping_list_id,
@@ -155,3 +161,8 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
             ) for uid in uids]
         )
         await self.coordinator.async_refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass update state from existing coordinator data."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()

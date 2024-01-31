@@ -1,7 +1,7 @@
 {
   "domain": "ha_kassalapp",
   "name": "Kassalapp",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "codeowners": [
     "@bendikrb"
   ],
@@ -9,6 +9,6 @@
   "documentation": "https://github.com/bendikrb/ha_kassalapp",
   "iot_class": "cloud_polling",
   "requirements": [
-    "kassalappy==0.7.0"
+    "kassalappy==1.0.6"
   ]
 }

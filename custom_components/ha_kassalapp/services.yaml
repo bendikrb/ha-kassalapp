@@ -2,10 +2,16 @@ product_search:
   fields:
     search:
       example: "grandiosa classic"
+      selector:
+        text:
     brand:
       example: "BAMA"
+      selector:
+        text:
     vendor:
       example: "orkla foods"
+      selector:
+        text:
     excl_allergens:
       selector:
         select:
@@ -44,6 +50,5 @@ product_search:
             - price_asc
             - price_desc
     unique:
-      default: false
       selector:
         boolean:

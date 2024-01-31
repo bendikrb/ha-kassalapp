@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Final
 
-from kassalappy.models import ShoppingListItem
+from kassalappy.models import ShoppingListItem, ShoppingList
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
     from kassalappy import Kassalapp
@@ -36,8 +36,18 @@ class KassalappCoordinator(DataUpdateCoordinator[list[ShoppingListItem]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+        self._shopping_lists: list[ShoppingList] | None = None
         self._shopping_list_id = shopping_list_id
 
-    async def _async_update_data(self) -> list[dict[str, Any]]:
+    async def _async_update_data(self) -> list[ShoppingListItem]:
         """Fetch tasks from API endpoint."""
-        return await self.api.get_shopping_list_items(self._shopping_list_id)
+        try:
+            return await self.api.get_shopping_list_items(self._shopping_list_id)
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    async def async_get_shopping_lists(self) -> list[ShoppingList]:
+        """Return todoist projects fetched at most once."""
+        if self._shopping_lists is None:
+            self._shopping_lists = await self.api.get_shopping_lists()
+        return self._shopping_lists
