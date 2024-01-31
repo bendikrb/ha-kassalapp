@@ -11,6 +11,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -20,13 +21,8 @@ if TYPE_CHECKING:
     from kassalappy import Kassalapp
 
     from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant, callback
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-TODO_STATUS_MAP = {
-    False: TodoItemStatus.NEEDS_ACTION,
-    True: TodoItemStatus.COMPLETED,
-}
 
 
 def _convert_todo_item(item: TodoItem):
@@ -114,7 +110,7 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
                 items.append(
                     TodoItem(
                         summary=item.text,
-                        uid=item.id,
+                        uid=str(item.id),
                         status=status,
                     )
                 )
@@ -144,7 +140,7 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
-        item_id: int = cast(int, item.uid)
+        item_id = cast(int, item.uid)
         await self.coordinator.api.update_shopping_list_item(
             self._shopping_list_id,
             item_id,
