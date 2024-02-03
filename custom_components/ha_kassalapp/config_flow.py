@@ -4,23 +4,20 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from kassalappy import Kassalapp
-from kassalappy.exceptions import AuthorizationError, FatalHttpException
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_TOKEN,
 )
+from kassalappy import Kassalapp
+from kassalappy.exceptions import AuthorizationError, FatalHttpException
 
-from .const import DOMAIN
+from .const import DOMAIN, SETTINGS_URL
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
 
 _LOGGER = logging.getLogger(__name__)
-
-SETTINGS_URL = "https://kassal.app/profil/api"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

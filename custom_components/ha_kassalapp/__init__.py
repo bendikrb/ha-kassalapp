@@ -5,15 +5,15 @@ import datetime
 import logging
 from typing import TYPE_CHECKING
 
-from kassalappy import Kassalapp
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import SupportsResponse
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from kassalappy import Kassalapp
 
-from .const import DOMAIN, SERVICE_PRODUCT_SEARCH
+from .const import DATA_API, DATA_STORE, DOMAIN, SERVICE_PRODUCT_SEARCH
+from .store import KassalappStore
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -51,17 +51,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def product_search_service(call: ServiceCall) -> ServiceResponse:
         """Search kassalapp for product."""
-        api: Kassalapp = hass.data[DOMAIN][entry.entry_id]
-        results = await api.product_search(**call.data)
+        client: Kassalapp = hass.data[DOMAIN][entry.entry_id][DATA_API]
+        results = await client.product_search(**call.data)
         return {
-            "results": results,
+            "results": [p.model_dump(mode="json") for p in results],
         }
 
     hass.data.setdefault(DOMAIN, {})
     token = entry.data[CONF_TOKEN]
     api = Kassalapp(token, timeout=TIMEOUT, websession=async_get_clientsession(hass))
 
-    hass.data[DOMAIN][entry.entry_id] = api
+    data_store = KassalappStore(hass)
+    await data_store.load()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_API: api,
+        DATA_STORE: data_store,
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.services.async_register(

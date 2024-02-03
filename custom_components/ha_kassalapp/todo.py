@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -12,9 +12,10 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DATA_API, DATA_STORE, DOMAIN
 from .coordinator import KassalappCoordinator
 
 if TYPE_CHECKING:
@@ -24,10 +25,12 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+    from .store import KassalappStore
+
 
 def _convert_todo_item(item: TodoItem):
     """Convert TodoItem dataclass items to dictionary of attributes for the Kassalapp API."""
-    result: dict[str, Any] = {}
+    result: dict[str, any] = {}
     if item.summary is not None:
         result["text"] = item.summary
     if item.status is not None:
@@ -39,12 +42,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Kassalapp to-do platform config entry."""
-    api: Kassalapp = hass.data[DOMAIN][entry.entry_id]
+    api: Kassalapp = hass.data[DOMAIN][entry.entry_id][DATA_API]
+    data_store: KassalappStore = hass.data[DOMAIN][entry.entry_id][DATA_STORE]
     shopping_lists = await api.get_shopping_lists()
     async_add_entities(
         (
             KassalappTodoListEntity(
                 KassalappCoordinator(hass, api, shopping_list.id),
+                data_store,
                 entry.entry_id,
                 shopping_list.id,
                 shopping_list.title,
@@ -78,11 +83,13 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.MOVE_TODO_ITEM
     )
 
     def __init__(
         self,
         coordinator: KassalappCoordinator,
+        store: KassalappStore,
         config_entry_id: str,
         shopping_list_id: int,
         shopping_list_title: str,
@@ -92,6 +99,7 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         self._shopping_list_id = shopping_list_id
         self._attr_unique_id = f"{config_entry_id}-{shopping_list_id}"
         self._attr_title = shopping_list_title
+        self._data_store = store
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -114,7 +122,8 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
                         status=status,
                     )
                 )
-            self._attr_todo_items = items
+            self._attr_todo_items = self._data_store.sorted_items(items, self.entity_id)
+
         super()._handle_coordinator_update()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -122,15 +131,6 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         list_item = {
             "text": item.summary,
         }
-        products = await self.coordinator.api.product_search(
-            search=list_item["text"],
-            unique=True,
-            size=1,
-            sort="date_asc",
-        )
-        if products:
-            product = products.pop()
-            list_item["product_id"] = product.id
 
         await self.coordinator.api.add_shopping_list_item(
             list_id=self._shopping_list_id,
@@ -151,14 +151,60 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
         await asyncio.gather(
-            *[self.coordinator.api.delete_shopping_list_item(
-                list_id=self._shopping_list_id,
-                item_id=cast(int, uid),
-            ) for uid in uids]
+            *[
+                self.coordinator.api.delete_shopping_list_item(
+                    list_id=self._shopping_list_id,
+                    item_id=cast(int, uid),
+                )
+                for uid in uids
+            ]
         )
         await self.coordinator.async_refresh()
+
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
+        """Move an item in the To-do list."""
+        if uid == previous_uid:
+            return
+
+        sort_weights = {
+            item.uid: index for index, item in enumerate(self._attr_todo_items)
+        }
+
+        # Ensure this item has the lowest weight
+        if previous_uid is None:
+            min_weight = min(sort_weights.values(), default=0)
+            sort_weights[uid] = min_weight - 1
+
+        # Move the item after the item with previous_uid
+        elif previous_uid in sort_weights:
+            target_weight = sort_weights[previous_uid]
+            for item_uid, weight in sort_weights.items():
+                if weight > target_weight:
+                    sort_weights[item_uid] += 1
+            sort_weights[uid] = target_weight + 1
+        else:
+            raise HomeAssistantError(
+                f"Item '{previous_uid}' not found in todo list {self.entity_id}"
+            )
+
+        # Normalize weights to avoid overflow
+        for index, (item_uid, _) in enumerate(
+            sorted(sort_weights.items(), key=lambda x: x[1])
+        ):
+            sort_weights[item_uid] = index
+
+        # Store the updated sort weights and hierarchy
+        self._data_store.set_weights(sort_weights, self.entity_id)
+        await self._async_save()
+        await self.async_update_ha_state(force_refresh=True)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
+
+    async def _async_save(self) -> None:
+        """Persist local data to disk."""
+        await self._data_store.save()
