@@ -1,0 +1,8 @@
+{
+  "name": "Kassalapp",
+  "filename": "ha_kassalapp.zip",
+  "hide_default_branch": true,
+  "homeassistant": "2024.1.5",
+  "render_readme": true,
+  "zip_release": true
+}
