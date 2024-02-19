@@ -6,7 +6,7 @@
     "@bendikrb"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/bendikrb/ha_kassalapp",
+  "documentation": "https://github.com/bendikrb/ha-kassalapp",
   "iot_class": "cloud_polling",
   "requirements": [
     "kassalappy==1.0.9"
