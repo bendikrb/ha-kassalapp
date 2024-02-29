@@ -49,8 +49,8 @@ The configuration UI will guide you through adding the integration to Home Assis
 [commits]: https://github.com/bendikrb/ha-kassalapp/commits/main
 [hacs]: https://github.com/hacs/integration
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
-[logo]: docs/assets/logo.png
-[icon]: docs/assets/icon.png
+[logo]: https://github.com/bendikrb/ha-kassalapp/blob/master/docs/assets/logo.png
+[icon]: https://github.com/bendikrb/ha-kassalapp/blob/master/docs/assets/icon.png
 [license-shield]: https://img.shields.io/github/license/bendikrb/ha-kassalapp.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-%40bendikrb-blue.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/bendikrb/ha-kassalapp.svg?style=for-the-badge
