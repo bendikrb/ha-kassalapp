@@ -11,15 +11,15 @@ classifiers = [
   "Intended Audience :: Developers",
   "Natural Language :: English",
   "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3",
 ]
 packages = []
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
-homeassistant = "^2024.1.5"
-kassalappy = "^1.0.9"
+python = ">=3.12,<3.13"
+homeassistant = "^2024.10.4"
+kassalappy = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "3.0.2"

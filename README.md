@@ -45,14 +45,14 @@ The configuration UI will guide you through adding the integration to Home Assis
 
 ***
 [kassalapp]: https://kassal.app
-[commits-shield]: https://img.shields.io/github/commit-activity/y/bendikrb/ha-kassalapp.svg?style=for-the-badge
+[commits-shield]: https://img.shields.io/github/commit-activity/y/bendikrb/ha-kassalapp.svg?style=flat
 [commits]: https://github.com/bendikrb/ha-kassalapp/commits/main
 [hacs]: https://github.com/hacs/integration
-[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge
-[logo]: https://github.com/bendikrb/ha-kassalapp/blob/master/docs/assets/logo.png
-[icon]: https://github.com/bendikrb/ha-kassalapp/blob/master/docs/assets/icon.png
-[license-shield]: https://img.shields.io/github/license/bendikrb/ha-kassalapp.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40bendikrb-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/bendikrb/ha-kassalapp.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat
+[logo]: https://raw.githubusercontent.com/bendikrb/ha-kassalapp/master/docs/assets/logo.png
+[icon]: https://raw.githubusercontent.com/bendikrb/ha-kassalapp/master/docs/assets/icon.png
+[license-shield]: https://img.shields.io/github/license/bendikrb/ha-kassalapp.svg?style=flat
+[maintenance-shield]: https://img.shields.io/badge/maintainer-%40bendikrb-blue.svg?style=flat
+[releases-shield]: https://img.shields.io/github/release/bendikrb/ha-kassalapp.svg?style=flat
 [releases]: https://github.com/bendikrb/ha-kassalapp/releases
-[download-latest-shield]: https://img.shields.io/github/downloads/bendikrb/ha-kassalapp/latest/total?style=for-the-badge
+[download-latest-shield]: https://img.shields.io/github/downloads/bendikrb/ha-kassalapp/latest/total?style=flat

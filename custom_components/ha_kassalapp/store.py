@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
+from homeassistant.helpers.storage import Store
+from homeassistant.config import ConfigType
 
 import attr
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
     from homeassistant.components.todo import TodoItem
 
 STORAGE_VERSION = 1
@@ -58,8 +61,8 @@ class ConfigStoreData:
 
 
 class KassalappStore:
-    def __init__(self, hass):
-        self.store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    def __init__(self, hass: HomeAssistant):
+        self.store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.listeners = []
         self.data: ConfigStoreData | None = None
         self.dirty = False
