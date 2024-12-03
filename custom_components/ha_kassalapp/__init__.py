@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     token = entry.data[CONF_TOKEN]
-    api = Kassalapp(token, timeout=TIMEOUT, websession=async_get_clientsession(hass))
+    api = Kassalapp(token, request_timeout=TIMEOUT, websession=async_get_clientsession(hass))
 
     data_store = KassalappStore(hass)
     await data_store.load()
