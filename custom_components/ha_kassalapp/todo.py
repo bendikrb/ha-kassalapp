@@ -1,8 +1,9 @@
 """A todo platform for Kassal.app."""
+
 from __future__ import annotations
 
 import asyncio
-import dataclasses
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.todo import (
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from .store import KassalappStore
 
 
-def _convert_todo_item(item: TodoItem):
+def _convert_todo_item(item: TodoItem) -> dict[str, any]:
     """Convert TodoItem dataclass items to dictionary of attributes for the Kassalapp API."""
     result: dict[str, any] = {}
     if item.summary is not None:
@@ -60,7 +61,7 @@ async def async_setup_entry(
     )
 
 
-@dataclasses.dataclass
+@dataclass
 class KassalappProduct:
     """A product description from kassalapp."""
 
@@ -69,7 +70,7 @@ class KassalappProduct:
     image: str
 
 
-@dataclasses.dataclass
+@dataclass
 class KassalappTodoItem(TodoItem):
     """An extended version of To-do item."""
 
@@ -109,8 +110,6 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
         else:
             items = []
             for item in self.coordinator.data:
-                # if item.list_id != self._shopping_list_id:
-                #     continue
                 if item.checked:
                     status = TodoItemStatus.COMPLETED
                 else:
@@ -185,9 +184,8 @@ class KassalappTodoListEntity(CoordinatorEntity[KassalappCoordinator], TodoListE
                     sort_weights[item_uid] += 1
             sort_weights[uid] = target_weight + 1
         else:
-            raise HomeAssistantError(
-                f"Item '{previous_uid}' not found in todo list {self.entity_id}"
-            )
+            msg = f"Item '{previous_uid}' not found in todo list {self.entity_id}"
+            raise HomeAssistantError(msg)
 
         # Normalize weights to avoid overflow
         for index, (item_uid, _) in enumerate(

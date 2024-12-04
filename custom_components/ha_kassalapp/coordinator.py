@@ -1,11 +1,12 @@
 """DataUpdateCoordinator for the Kassalapp component."""
+
 from __future__ import annotations
 
 import datetime
 import logging
 from typing import TYPE_CHECKING, Final
 
-from kassalappy.models import ShoppingListItem, ShoppingList
+from kassalappy.models import ShoppingList, ShoppingListItem
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -44,7 +45,8 @@ class KassalappCoordinator(DataUpdateCoordinator[list[ShoppingListItem]]):
         try:
             return await self.api.get_shopping_list_items(self._shopping_list_id)
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            msg = f"Error communicating with API: {err}"
+            raise UpdateFailed(msg) from err
 
     async def async_get_shopping_lists(self) -> list[ShoppingList]:
         """Return todoist projects fetched at most once."""

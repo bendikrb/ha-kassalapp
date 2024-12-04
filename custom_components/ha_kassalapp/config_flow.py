@@ -1,16 +1,18 @@
 """Config flow for Kassalapp integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any
 
+from kassalappy import Kassalapp
+from kassalappy.exceptions import AuthorizationError, FatalHttpException
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_TOKEN,
 )
-from kassalappy import Kassalapp
-from kassalappy.exceptions import AuthorizationError, FatalHttpException
 
 from .const import DOMAIN, SETTINGS_URL
 
@@ -45,9 +47,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await api.healthy()
             except AuthorizationError:
                 errors["base"] = "invalid_api_key"
-            except FatalHttpException as err:
+            except FatalHttpException:
                 errors["base"] = "cannot_connect"
-                _LOGGER.exception("Cannot connect: %s", err)
+                _LOGGER.exception("Cannot connect")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
